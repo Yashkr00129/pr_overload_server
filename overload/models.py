@@ -21,6 +21,9 @@ class Exercise(models.Model):
     name = models.CharField(max_length=255)
     type = models.CharField(max_length=1, choices=TYPE_CHOICES, default=TYPE_ISOLATION)
 
+    def __str__(self):
+        return self.name
+
     # Add any other fields you want for your exercise model here
 
 
@@ -31,8 +34,9 @@ class Set(models.Model):
     # Add any other fields you want for your set model here
 
 
+# A user will create his own split when he logs on to the application.
 class Split(models.Model):
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, null=False)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     workouts = models.ManyToManyField('Workout')
 
@@ -45,6 +49,7 @@ class Split(models.Model):
 
 
 class Workout(models.Model):
+    name = models.CharField(max_length=255, null=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     exercises = models.ManyToManyField(Exercise)
     date_created = models.DateTimeField(auto_now_add=True)
