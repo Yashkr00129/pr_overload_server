@@ -1,4 +1,4 @@
-from overload.models import User
+from overload.models import Profile
 from djoser.serializers import UserSerializer as BaseUserSerializer, UserCreateSerializer as BaseUserCreateSerializer
 
 

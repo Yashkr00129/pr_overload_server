@@ -1,13 +1,12 @@
 from django.conf import settings
-from django.core.exceptions import ValidationError
 from django.db import models
 
 
-class User(models.Model):
+class Profile(models.Model):
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    height = models.FloatField(null=True, blank=True)
-    weight = models.FloatField(null=True, blank=True)
+    height = models.FloatField()
+    weight = models.FloatField()
 
 
 class Exercise(models.Model):
@@ -18,55 +17,28 @@ class Exercise(models.Model):
         (TYPE_ISOLATION, "Isolation")
     ]
 
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, unique=True)
     type = models.CharField(max_length=1, choices=TYPE_CHOICES, default=TYPE_ISOLATION)
 
     def __str__(self):
         return self.name
 
-    # Add any other fields you want for your exercise model here
-
 
 class Set(models.Model):
-    exercise = models.ForeignKey(Exercise, on_delete=models.CASCADE)
+    workout_exercise = models.ForeignKey("WorkoutExercise", on_delete=models.CASCADE)
     weight = models.FloatField()
     reps = models.PositiveIntegerField()
-    # Add any other fields you want for your set model here
 
 
-# A user will create his own split when he logs on to the application.
-class Split(models.Model):
-    name = models.CharField(max_length=255, null=False)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    workouts = models.ManyToManyField('Workout')
-
-    def __str__(self):
-        return self.name
-
-    def clean(self):
-        if self.workouts.count() > 7:
-            raise ValidationError('A split can have maximum 7 workouts')
+class WorkoutExercise(models.Model):
+    workout = models.ForeignKey("Workout", on_delete=models.CASCADE)
+    exercise = models.ForeignKey(Exercise, on_delete=models.CASCADE)
 
 
 class Workout(models.Model):
     name = models.CharField(max_length=255, null=False)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    exercises = models.ManyToManyField(Exercise)
+    user = models.ForeignKey(Profile, on_delete=models.CASCADE)
     date_created = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.name
-
-
-class SplitWorkout(models.Model):
-    DAY_CHOICES = [
-        ('MON', 'Monday'),
-        ('TUE', 'Tuesday'),
-        ('WED', 'Wednesday'),
-        ('THU', 'Thursday'),
-        ('FRI', 'Friday'),
-        ('SAT', 'Saturday'),
-        ('SUN', 'Sunday')
-    ]
-    day = models.CharField(max_length=20, choices=DAY_CHOICES)
-    workout = models.OneToOneField(Workout, on_delete=models.PROTECT)

@@ -1,38 +1,37 @@
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import ModelViewSet
 
-from .models import Exercise, Split, Set, Workout, User
-from .serializers import ExerciseSerializer, SplitSerializer, SetSerializer, WorkoutSerializer, CreateWorkoutSerializer, \
-    UserSerializer, UserCreateSerializer
+from .models import Exercise, Set, Workout, Profile, WorkoutExercise
+from .serializers import ExerciseSerializer, SetSerializer, WorkoutSerializer, CreateWorkoutSerializer, \
+    ProfileSerializer, CreateProfileSerializer, WorkoutExerciseSerializer, CreateWorkoutExerciseSerializer
 
 
 # Create your views here.
-class UserViewSet(ModelViewSet):
+class ProfileViewSet(ModelViewSet):
     http_method_names = ["get", "post", "put", "delete"]
     permission_classes = [IsAuthenticated]
-    serializer_class = UserSerializer
-    queryset = User.objects.all()
+    serializer_class = ProfileSerializer
+    queryset = Profile.objects.all()
 
     def get_serializer_context(self):
-       return {"user": self.request.user}
+        return {"user": self.request.user}
+
     def get_serializer_class(self):
         if self.request.method == "POST":
-            return UserCreateSerializer
-        return UserSerializer
+            return CreateProfileSerializer
+        return ProfileSerializer
 
 
 class ExerciseViewSet(ModelViewSet):
     http_method_names = ['get', 'post', 'delete']
-    permission_classes = [IsAuthenticated]
+
+    def get_permissions(self):
+        if self.request.method in ['GET']:
+            return []
+        return [IsAuthenticated()]
+
     serializer_class = ExerciseSerializer
     queryset = Exercise.objects.all()
-
-
-class SplitViewSet(ModelViewSet):
-    http_method_names = ["get", "post", "patch", "delete"]
-    permission_classes = [IsAuthenticated]
-    serializer_class = SplitSerializer
-    queryset = Split.objects.all()
 
 
 class SetViewSet(ModelViewSet):
@@ -41,16 +40,27 @@ class SetViewSet(ModelViewSet):
     serializer_class = SetSerializer
     queryset = Set.objects.all()
 
+    def get_serializer_context(self):
+        return {
+            'user': self.request.user,
+            "workout_id": self.kwargs["workout_pk"],
+            "workout_exercise_id":self.kwargs["workout_exercise_pk"]
+        }
+
+    def get_queryset(self):
+        return Set.objects.filter(workout_exercise_id=self.kwargs["workout_exercise_pk"])
+
+
+#     Here we want to get the sets
+#     We also want to be able to add set to a workout
+
 
 class WorkoutViewSet(ModelViewSet):
     http_method_names = ["get", "post", "put", "delete"]
     permission_classes = [IsAuthenticated]
-    serializer_class = WorkoutSerializer
     queryset = Workout.objects.all()
 
     def get_serializer_context(self):
-        print(self.request.user)
-
         return {'user': self.request.user}
 
     def get_serializer_class(self):
@@ -58,3 +68,24 @@ class WorkoutViewSet(ModelViewSet):
             return CreateWorkoutSerializer
         else:
             return WorkoutSerializer
+
+
+class WorkoutExerciseViewSet(ModelViewSet):
+    http_method_names = ["get", "post", "put", "delete"]
+    permission_classes = [IsAuthenticated]
+    queryset = WorkoutExercise.objects.all()
+
+    def get_serializer_class(self):
+        if self.request.method == "POST":
+            return CreateWorkoutExerciseSerializer
+        else:
+            return WorkoutExerciseSerializer
+
+    def get_queryset(self):
+        return WorkoutExercise.objects.filter(workout_id=self.kwargs["workout_pk"])
+
+    def get_serializer_context(self):
+        return {
+            'user': self.request.user,
+            "workout_id": self.kwargs["workout_pk"]
+        }

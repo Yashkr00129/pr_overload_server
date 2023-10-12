@@ -1,6 +1,27 @@
 from rest_framework import serializers
 
-from .models import Exercise, Split, Set, Workout, User
+from .models import Exercise, Set, Workout, Profile, WorkoutExercise
+
+
+class ProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Profile
+        fields = ("id", "user", "height", "weight")
+
+
+class CreateProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Profile
+        fields = ("id", "height", "weight")
+
+    def create(self, validated_data):
+        #   Get the user from the context
+        user = self.context["user"]
+        validated_data["user"] = user
+
+        # Create a user
+        user = Profile.objects.create(**validated_data)
+        return user
 
 
 class ExerciseSerializer(serializers.ModelSerializer):
@@ -12,57 +33,56 @@ class ExerciseSerializer(serializers.ModelSerializer):
 class SetSerializer(serializers.ModelSerializer):
     class Meta:
         model = Set
-        fields = ["id", "exercise", "reps", "weight"]
+        fields = ["id", "reps", "weight"]
+
+    def create(self, validated_data):
+        workout_exercise_id = self.context["workout_exercise_id"]
+        return Set.objects.create(workout_exercise_id=workout_exercise_id, **validated_data)
 
 
-class SplitSerializer(serializers.ModelSerializer):
+class WorkoutExerciseSerializer(serializers.ModelSerializer):
+    sets = SetSerializer(many=True, read_only=True)
+    exercise = ExerciseSerializer()
+
     class Meta:
-        model = Split
-        fields = ["id", "name"]
+        model = WorkoutExercise
+        fields = ["id", "exercise", "sets", ]
+
+
+class CreateWorkoutExerciseSerializer(serializers.ModelSerializer):
+    sets = SetSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = WorkoutExercise
+        fields = ["id", "exercise", "sets"]
+
+    def create(self, validated_data):
+        workout_id = self.context['workout_id']
+        return WorkoutExercise.objects.create(workout_id=workout_id, **validated_data)
 
 
 class WorkoutSerializer(serializers.ModelSerializer):
-    exercises = ExerciseSerializer(many=True)
+    exercises = serializers.SerializerMethodField()
+
+    def get_exercises(self, product):
+        exercises = WorkoutExercise.objects.filter(workout_id=product.id)
+        serializer = WorkoutExerciseSerializer(exercises, many=True)
+        return serializer.data
 
     class Meta:
         model = Workout
-        fields = ["id", "name", "exercises"]
+        fields = ["id", "name", "user", "exercises", "date_created"]
 
 
 class CreateWorkoutSerializer(serializers.ModelSerializer):
     class Meta:
         model = Workout
-        fields = ["id", "name", "exercises"]
+        fields = ["id", "name"]
 
     def create(self, validated_data):
-        # Add the user to the validated_data dictionary
         context_user = self.context["user"]
-        user = User.objects.get(user_id=context_user.id)
+        user = Profile.objects.get(user=context_user)
 
         validated_data["user"] = user
-        exercises = validated_data.pop("exercises")
         workout = Workout.objects.create(**validated_data)
-        for exercise in exercises:
-            workout.exercises.add(exercise)
         return workout
-
-
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ("id", "username", "height", "weight")
-
-
-class UserCreateSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ("id", "height", "weight")
-
-    def create(self, validated_data):
-        #   Get the user from the context
-        user = self.context["user"]
-        validated_data["user"] = user
-
-        # Create a user
-        user = User.objects.create(**validated_data)
-        return user
