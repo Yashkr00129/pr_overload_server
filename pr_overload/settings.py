@@ -81,7 +81,7 @@ DATABASES = {
         'NAME': 'proverload',
         'HOST': 'localhost',
         'USER': 'root',
-        'PASSWORD': '1234'
+        'PASSWORD': 'root'
     }
 }
 
