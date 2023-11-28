@@ -73,7 +73,7 @@ class WorkoutViewSet(ModelViewSet):
 class WorkoutExerciseViewSet(ModelViewSet):
     http_method_names = ["get", "post", "put", "delete"]
     permission_classes = [IsAuthenticated]
-    queryset = WorkoutExercise.objects.all()
+    # queryset = WorkoutExercise.objects.prefetch_related("set").all()
 
     def get_serializer_class(self):
         if self.request.method == "POST":
@@ -81,8 +81,11 @@ class WorkoutExerciseViewSet(ModelViewSet):
         else:
             return WorkoutExerciseSerializer
 
+    # def get_queryset(self):
+    #     return WorkoutExercise.objects.filter(workout_id=self.kwargs["workout_pk"]).prefetch_related("set_set")
     def get_queryset(self):
-        return WorkoutExercise.objects.filter(workout_id=self.kwargs["workout_pk"])
+        return WorkoutExercise.objects.filter(workout_id=self.kwargs["workout_pk"]).prefetch_related('sets').all()
+
 
     def get_serializer_context(self):
         return {
