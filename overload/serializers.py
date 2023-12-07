@@ -24,10 +24,27 @@ class CreateProfileSerializer(serializers.ModelSerializer):
         return user
 
 
-class ExerciseSerializer(serializers.ModelSerializer):
+class AdminExerciseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Exercise
         fields = ["id", "name", "type"]
+
+
+class ExerciseSerializer(serializers.ModelSerializer):
+    personal = serializers.BooleanField(read_only=True)
+
+    class Meta:
+        model = Exercise
+        fields = ["id", "name", "type", "personal"]
+
+    def create(self, validated_data):
+        context_user = self.context['request'].user
+        user = Profile.objects.get(user=context_user)
+
+        validated_data["user"] = user
+        validated_data['personal'] = True
+
+        return super().create(validated_data)
 
 
 class SetSerializer(serializers.ModelSerializer):
@@ -42,7 +59,7 @@ class SetSerializer(serializers.ModelSerializer):
 
 class WorkoutExerciseSerializer(serializers.ModelSerializer):
     sets = SetSerializer(many=True, read_only=True)
-    exercise = ExerciseSerializer()
+    exercise = AdminExerciseSerializer()
 
     class Meta:
         model = WorkoutExercise

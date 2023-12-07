@@ -1,9 +1,11 @@
+from django.db.models import Q
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import ModelViewSet
 
 from .models import Exercise, Set, Workout, Profile, WorkoutExercise
-from .serializers import ExerciseSerializer, SetSerializer, WorkoutSerializer, CreateWorkoutSerializer, \
-    ProfileSerializer, CreateProfileSerializer, WorkoutExerciseSerializer, CreateWorkoutExerciseSerializer
+from .serializers import AdminExerciseSerializer, SetSerializer, WorkoutSerializer, CreateWorkoutSerializer, \
+    ProfileSerializer, CreateProfileSerializer, WorkoutExerciseSerializer, CreateWorkoutExerciseSerializer, \
+    ExerciseSerializer
 
 
 # Create your views here.
@@ -30,8 +32,18 @@ class ExerciseViewSet(ModelViewSet):
             return []
         return [IsAuthenticated()]
 
-    serializer_class = ExerciseSerializer
-    queryset = Exercise.objects.all()
+    serializer_class = AdminExerciseSerializer
+
+    def get_serializer_class(self):
+        if self.request.user.is_staff:
+            return AdminExerciseSerializer
+        else:
+            return ExerciseSerializer
+
+    def get_queryset(self):
+        user = self.request.user.id
+        profile = Profile.objects.get(user=user)
+        return Exercise.objects.filter(Q(user=profile) | Q(user=None))
 
 
 class SetViewSet(ModelViewSet):
@@ -44,7 +56,7 @@ class SetViewSet(ModelViewSet):
         return {
             'user': self.request.user,
             "workout_id": self.kwargs["workout_pk"],
-            "workout_exercise_id":self.kwargs["workout_exercise_pk"]
+            "workout_exercise_id": self.kwargs["workout_exercise_pk"]
         }
 
     def get_queryset(self):
@@ -73,6 +85,7 @@ class WorkoutViewSet(ModelViewSet):
 class WorkoutExerciseViewSet(ModelViewSet):
     http_method_names = ["get", "post", "put", "delete"]
     permission_classes = [IsAuthenticated]
+
     # queryset = WorkoutExercise.objects.prefetch_related("set").all()
 
     def get_serializer_class(self):
@@ -85,7 +98,6 @@ class WorkoutExerciseViewSet(ModelViewSet):
     #     return WorkoutExercise.objects.filter(workout_id=self.kwargs["workout_pk"]).prefetch_related("set_set")
     def get_queryset(self):
         return WorkoutExercise.objects.filter(workout_id=self.kwargs["workout_pk"]).prefetch_related('sets').all()
-
 
     def get_serializer_context(self):
         return {
