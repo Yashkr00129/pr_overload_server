@@ -10,6 +10,7 @@ djoser = "*"
 mysqlclient = "*"
 djangorestframework-simplejwt = "*"
 drf-nested-routers = "*"
+django-environ = "*"
 
 [dev-packages]
 
