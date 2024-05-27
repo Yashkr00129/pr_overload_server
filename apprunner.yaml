@@ -9,17 +9,6 @@ build:
     post-build:
       - python manage.py migrate
       - python manage.py test
-  env:
-    - name: DJANGO_SETTINGS_MODULE
-      value: "django_apprunner.settings"
-    - name: DB_NAME
-      value: proverload
-    - name: DB_HOST
-      value: database-1.c32sui6iawn6.ap-south-1.rds.amazonaws.
-    - name: DB_USER
-      value: admin
-    - name: DB_PASSWORD
-      value: yashkr00129
 run:
   command: pipenv run gunicorn django_apprunner.wsgi --log-file -
   network:
