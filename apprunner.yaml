@@ -21,7 +21,7 @@ build:
     - name: DB_PASSWORD
       value: yashkr00129
 run:
-  runtime-version: 3.11.9
+  runtime-version: 3.11
   command: pipenv run gunicorn django_apprunner.wsgi --log-file -
   network:
     port: 8000
