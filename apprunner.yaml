@@ -1,15 +1,29 @@
 version: 1.0
-runtime: python3.11
+runtime: python311
 
 build:
   commands:
     build:
-      - pip install pipenv
+      - pip3 install pipenv
       - pipenv install
     post-build:
-      - python manage.py migrate
-      - python manage.py test
+      - python3 manage.py migrate
+      - python3 manage.py test
+    env:
+    - name: DJANGO_SETTINGS_MODULE
+      value: "django_apprunner.settings"
+    - name: DB_NAME
+      value: proverload
+    - name: DB_HOST
+      value: database-1.c32sui6iawn6.ap-south-1.rds.amazonaws.com
+    - name: DB_USER
+      value: admin
+    - name: DB_PASSWORD
+      value: yashkr00129
 run:
+  pre-run:
+    - pip3 install pipenv
+    - pipenv install
   command: pipenv run gunicorn django_apprunner.wsgi --log-file -
   network:
     port: 8000
@@ -20,7 +34,7 @@ run:
     - name: DB_NAME
       value: proverload
     - name: DB_HOST
-      value: database-1.c32sui6iawn6.ap-south-1.rds.amazonaws.
+      value: database-1.c32sui6iawn6.ap-south-1.rds.amazonaws.com
     - name: DB_USER
       value: admin
     - name: DB_PASSWORD
