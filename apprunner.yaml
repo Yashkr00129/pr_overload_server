@@ -4,8 +4,6 @@ runtime: python311
 build:
   commands:
     build:
-      - sudo yum update
-      - sudo yum install python3-devel mysql-devel pkgconfig
       - pip3 install pipenv
       - pipenv install
     post-build:
@@ -22,6 +20,10 @@ build:
     value: admin
   - name: DB_PASSWORD
     value: yashkr00129
+  - name: MYSQLCLIENT_CFLAGS
+    value: pkg-config mysqlclient --cflags
+  - name: MYSQLCLIENT_LDFLAGS
+    value: pkg-config mysqlclient --libs
 run:
   pre-run:
     - pip3 install pipenv
