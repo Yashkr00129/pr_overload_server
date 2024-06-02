@@ -4,6 +4,7 @@ runtime: python311
 build:
   commands:
     build:
+      - sudo yum install python3-devel mysql-devel pkgconfig
       - pip3 install pipenv
       - pipenv install
     post-build:
